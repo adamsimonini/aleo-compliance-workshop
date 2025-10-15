@@ -9,12 +9,12 @@ TODO:
        network fees and not conflict with any existing program on the network
         - ex) `dogecoin_token.aleo`
     2. Change the name of the program below
-        - ex) `program dogecoin_token.aleo {`
+        - ex) `program √.aleo {`
     3. Change the "program" field in the program.json file to match the name of your new program
 
 ====================================================================================================================  
 */
-program token.aleo {
+program the_best_token.aleo {
     mapping balances: address => u64;  // On-chain mapping between user addresses and public token balances
 
     record Token {
