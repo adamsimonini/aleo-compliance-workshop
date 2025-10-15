@@ -15,6 +15,19 @@ TODO:
 ====================================================================================================================  
 */
 program the_best_token.aleo {
+    /* 
+        A mapping is declared as mapping {name}:. Mappings contain key-value pairs and must be defined within a program.
+        Mappings are stored publicly on-chain, but are program-scopped state. 
+        It merely lists address that have entries written for that program.
+
+        Balances is a public key-value store owned by my program, like its own, scoped dictionary of relevant addresses.
+        
+        New addresses get new keys when they first receive tokens.
+        Existing addresses have their values overwritten (not appended) when minted to or burned from.
+        The mapping grows in size (more keys) but each key has one current value that gets replaced on updates.
+    
+    */
+
     mapping balances: address => u64;  // On-chain mapping between user addresses and public token balances
 
     record Token {
@@ -47,23 +60,39 @@ program the_best_token.aleo {
     
     ====================================================================================================================  
     */
+
+    /*
+        FUTURES
+        A future is equivalent to the call graph of the on-chain execution and is explicitly used when finalizing an execution. 
+        Instead of constructing the call graph implicitly from the code, the transition/circuit explicitly outputs a future, 
+        specifying which code blocks to run on-chain and how to run them.
+    */
+
     async transition mint_public(
-        public recipient: address, 
-        public amount: u64
+        public recipient: address,  
+        public amount_to_mint: u64
     ) -> Future {
+        // we imported workshow_ofac.aleo above, and now we're using one of its methods. think of it like an imported package
         let address_check : Future = workshop_ofac.aleo/address_check(recipient);
 
-        // TODO: Fill in here
+        return mint_public_onchain(recipient, amount_to_mint, address_check);
     }
 
     async function mint_public_onchain(
         public recipient: address, 
-        public amount: u64,
+        public amount_to_mint: u64,
         public address_check : Future
-    ) {
-        address_check.await();
+    ) -> Future{
+        let mint_return : Future = async {
+            address_check.await();
+            // ? Do we not need a conditional check here? If not, what is returned on failure?
+            // await address verification before continuing
 
-        // TODO: Fill in here
+            // * balances use u64, so they cannot take negative numbers 
+            let current_balance : u64 = balances.get_or_use(recipient, 0u64); //0u64 is the default value of zero if the recipient is not found
+            balances.set(recipient, current_balance + amount_to_mint);
+        };
+        return mint_return;
     }
 
 
@@ -90,15 +119,26 @@ program the_best_token.aleo {
     async transition mint_private(
         private recipient: address, 
         private amount: u64
-    ) -> (Token,Future) {
-        // TODO: Fill in here
-
+    ) -> (Token, Future) {
+        let address_check: Future = workshop_ofac.aleo/address_check(recipient);
+        let token: Token = Token {
+            owner: recipient,
+            amount: amount
+        };
+        return (token, mint_private_onchain(address_check));
     }
+    
     async function mint_private_onchain(
-        address_check : Future
-    ){
-        // TODO: Fill in here
+        public address_check : Future
+    ) -> Future{
+        let mint_return : Future = async {
+            address_check.await();
+            // ? Do we not need a conditional check here? If not, what is returned on failure?
+            // await address verification before continuing
+        };
+        return mint_return;
     }
+    // TODO: Fill in here
 
 
 
