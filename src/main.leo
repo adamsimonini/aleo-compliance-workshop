@@ -1,3 +1,4 @@
+// OFAC is a US Treasury Depoarment agency maining sanctions lists. This is important for regulatory compliance.
 import workshop_ofac.aleo;
 
 /*
@@ -21,11 +22,6 @@ program the_best_token.aleo {
         It merely lists address that have entries written for that program.
 
         Balances is a public key-value store owned by my program, like its own, scoped dictionary of relevant addresses.
-        
-        New addresses get new keys when they first receive tokens.
-        Existing addresses have their values overwritten (not appended) when minted to or burned from.
-        The mapping grows in size (more keys) but each key has one current value that gets replaced on updates.
-    
     */
 
     mapping balances: address => u64;  // On-chain mapping between user addresses and public token balances
@@ -68,6 +64,7 @@ program the_best_token.aleo {
         specifying which code blocks to run on-chain and how to run them.
     */
 
+    // * transitions are offchain functions that are executed offchain and have their corresponding zero-knowledge proof verified onchain.
     async transition mint_public(
         public recipient: address,  
         public amount_to_mint: u64
@@ -78,6 +75,7 @@ program the_best_token.aleo {
         return mint_public_onchain(recipient, amount_to_mint, address_check);
     }
 
+    // * async functions are onchain functions that are executed onchain.
     async function mint_public_onchain(
         public recipient: address, 
         public amount_to_mint: u64,
@@ -116,6 +114,26 @@ program the_best_token.aleo {
     
     ====================================================================================================================  
     */
+    /* 
+        Since address are public, and balances stores addresses on-chain, we must find a different way to store the recipient's address privately.
+        We do this by initializing a Token record with the recipient as the owner and the amount as the amount.
+        Then we pass the Future to the `mint_private_onchain` function.
+
+        A Token record is a private, on-chain record. Its contents are private, but the record itself is public. Only the owner can decrypt it.
+    
+        * The transaction is private: the sender, the receiver, the functionl called, the values, and the success/failure.
+        * The recipients gains access to the Token record by decrypting it with their private key. The token record is hosted on-chain, but the contents are encrypted.
+
+        * What the blockchain can see:
+            - program and function execution are public
+        
+        * What the blockchain CANNOT see:
+            - caller (encrypted)
+            - function inputs (encrypted)
+            - function outputs (encrypted)
+            - recipient (encrypted)
+            - values (encrypted)
+    */
     async transition mint_private(
         private recipient: address, 
         private amount: u64
@@ -125,24 +143,19 @@ program the_best_token.aleo {
             owner: recipient,
             amount: amount
         };
-        return (token, mint_private_onchain(address_check));
+        return (token, mint_private_onchain_sanction_check(address_check));
     }
-    
-    async function mint_private_onchain(
-        public address_check : Future
-    ) -> Future{
-        let mint_return : Future = async {
+
+    async function mint_private_onchain_sanction_check(
+        address_check: Future
+    ) -> Future {
+        let sanction_check_return: Future = async {
             address_check.await();
-            // ? Do we not need a conditional check here? If not, what is returned on failure?
-            // await address verification before continuing
+            // No additional logic needed for private mint
+            // The Token record is already created and returned above
         };
-        return mint_return;
+        return sanction_check_return;
     }
-    // TODO: Fill in here
-
-
-
-
 
     /*
     ====================================================================================================================
@@ -164,19 +177,37 @@ program the_best_token.aleo {
     
     ====================================================================================================================  
     */
+
     async transition transfer_public(
         public recipient: address, 
         public amount: u64
     ) -> Future {
-        // TODO: Fill in here
+        let address_check : Future = workshop_ofac.aleo/address_check(recipient);
+        let sender: address = self.signer; // ? https://developer.aleo.org/guides/aleo/language/#special-operands
+
+        return transfer_public_onchain(sender, recipient, amount, address_check);
     }
     async function transfer_public_onchain(
         public sender: address, 
         public recipient: address, 
         public amount: u64,
         public address_check : Future
-    ) {
-        // TODO: Fill in here
+    ) -> Future {
+        let transfer_return : Future = async {
+            // await address verification before continuing
+            address_check.await();
+
+            // subtract from sender 
+            let sender_balance: u64 = balances.get_or_use(sender, 0u64);
+            assert(sender_balance >= amount); 
+            balances.set(sender, sender_balance - amount);
+
+            // add to recipient
+            let recipient_balance: u64 = balances.get_or_use(recipient, 0u64);
+            balances.set(recipient, recipient_balance + amount);
+
+        };
+        return transfer_return;
     }
 
 
