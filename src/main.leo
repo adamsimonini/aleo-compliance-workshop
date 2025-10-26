@@ -236,17 +236,35 @@ program the_best_token.aleo {
     ====================================================================================================================  
     */
     async transition transfer_private(
-        private sender: Token, 
+        private sender: Token, // this transition only works with private tokens
         private recipient: address, 
         private amount: u64
     ) -> (Token, Token, Future) {
-        // TODO: Fill in here
+        let address_check: Future = workshop_ofac.aleo/address_check(recipient);
+        assert(sender.amount >= amount); // ensure sender has a sufficient balance
+
+        let sender_token: Token = Token {
+            owner: sender.owner,
+            amount: sender.amount - amount
+        };
+
+        let recipient_token: Token = Token {
+            owner: recipient,
+            amount: amount
+        };
+
+        return (sender_token, recipient_token, onchain_sanction_check(address_check));
     }
 
-    async function transfer_private_onchain(
+    async function onchain_sanction_check(
         public address_check : Future
-    ){
-        // TODO: Fill in here
+    ) -> Future {
+        let transfer_return: Future = async {
+            address_check.await();
+            // No additional logic needed for private transfer
+            // The Token records are already created and returned above
+        };
+        return transfer_return;
     }
 
 
