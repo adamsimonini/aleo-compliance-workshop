@@ -107,9 +107,9 @@ program the_best_token.aleo {
         `mint_private`:
             1. Query the `address_check` function in `workshop_ofac.aleo` with the `recipient` field
             2. Initialize a Token record with the `recipient` as the owner and the `amount` as the amount
-            3. Return the Token record and pass the Future to the `mint_private_onchain` function
+            3. Return the Token record and pass the Future to the `mint_private_onchain_sanction_check` function
 
-        `mint_private_onchain`:  
+        `mint_private_onchain_sanction_check`:  
             1. Await the `address_check` Future
     
     ====================================================================================================================  
@@ -240,26 +240,25 @@ program the_best_token.aleo {
         private recipient: address, 
         private amount: u64
     ) -> (Token, Token, Future) {
-        let address_check: Future = workshop_ofac.aleo/address_check(recipient);
-        assert(sender.amount >= amount); // ensure sender has a sufficient balance
+        let address_check : Future = workshop_ofac.aleo/address_check(recipient);
 
-        let sender_token: Token = Token {
+        assert(sender.amount >= amount);
+
+        let sender_token : Token = Token {
             owner: sender.owner,
             amount: sender.amount - amount
         };
-
-        let recipient_token: Token = Token {
+        let recipient_token : Token = Token {
             owner: recipient,
             amount: amount
         };
-
-        return (sender_token, recipient_token, onchain_sanction_check(address_check));
+        return (sender_token, recipient_token, transfer_private_onchain(address_check));
     }
 
     async function onchain_sanction_check(
         public address_check : Future
     ) -> Future {
-        let transfer_return: Future = async {
+        let transfer_return : Future = async {
             address_check.await();
             // No additional logic needed for private transfer
             // The Token records are already created and returned above
