@@ -5,3 +5,5 @@ outputs/
 
 /ai-context
 /build
+
+.evn.env
