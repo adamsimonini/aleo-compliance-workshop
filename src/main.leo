@@ -75,22 +75,23 @@ program the_best_token.aleo {
         return mint_public_onchain(recipient, amount_to_mint, address_check);
     }
 
-    // * async functions are onchain functions that are executed onchain.
+    /* 
+        * async functions are onchain functions that are executed onchain. the do not return anything. the often commit mutations to the blockchain state an instantiation.
+        Async Functions Don't Return Values - They Execute Side Effects
+        The mint_public_onchain function does NOT return anything. It's designed to execute side effects (mutations) on the blockchain state. Here's what happens:
+    */
     async function mint_public_onchain(
         public recipient: address, 
         public amount_to_mint: u64,
         public address_check : Future
-    ) -> Future{
-        let mint_return : Future = async {
-            address_check.await();
-            // ? Do we not need a conditional check here? If not, what is returned on failure?
-            // await address verification before continuing
+    ) {
+        // ? Do we not need a conditional check here? If not, what is returned on failure?
+        // await address verification before continuing
+        address_check.await();
 
-            // * balances use u64, so they cannot take negative numbers 
-            let current_balance : u64 = balances.get_or_use(recipient, 0u64); //0u64 is the default value of zero if the recipient is not found
-            balances.set(recipient, current_balance + amount_to_mint);
-        };
-        return mint_return;
+        // * balances use u64, so they cannot take negative numbers 
+        let current_balance : u64 = balances.get_or_use(recipient, 0u64); //0u64 is the default value of zero if the recipient is not found
+        balances.set(recipient, current_balance + amount_to_mint);
     }
 
 
@@ -143,18 +144,16 @@ program the_best_token.aleo {
             owner: recipient,
             amount: amount
         };
-        return (token, mint_private_onchain_sanction_check(address_check));
+        
+        return (token, mint_private_onchain(address_check));
     }
 
-    async function mint_private_onchain_sanction_check(
+    async function mint_private_onchain(
         address_check: Future
-    ) -> Future {
-        let sanction_check_return: Future = async {
-            address_check.await();
-            // No additional logic needed for private mint
-            // The Token record is already created and returned above
-        };
-        return sanction_check_return;
+    ) {
+        address_check.await();
+        // No additional logic needed for private mint
+        // The Token record is already created and returned above
     }
 
     /*
@@ -187,27 +186,24 @@ program the_best_token.aleo {
 
         return transfer_public_onchain(sender, recipient, amount, address_check);
     }
+
     async function transfer_public_onchain(
         public sender: address, 
         public recipient: address, 
         public amount: u64,
         public address_check : Future
-    ) -> Future {
-        let transfer_return : Future = async {
-            // await address verification before continuing
-            address_check.await();
+    ) {
+        // await address verification before continuing
+        address_check.await();
 
-            // subtract from sender 
-            let sender_balance: u64 = balances.get_or_use(sender, 0u64);
-            assert(sender_balance >= amount); 
-            balances.set(sender, sender_balance - amount);
+        // subtract from sender 
+        let sender_balance: u64 = balances.get_or_use(sender, 0u64);
+        assert(sender_balance >= amount); 
+        balances.set(sender, sender_balance - amount);
 
-            // add to recipient
-            let recipient_balance: u64 = balances.get_or_use(recipient, 0u64);
-            balances.set(recipient, recipient_balance + amount);
-
-        };
-        return transfer_return;
+        // add to recipient
+        let recipient_balance: u64 = balances.get_or_use(recipient, 0u64);
+        balances.set(recipient, recipient_balance + amount);
     }
 
 
@@ -255,15 +251,12 @@ program the_best_token.aleo {
         return (sender_token, recipient_token, transfer_private_onchain(address_check));
     }
 
-    async function onchain_sanction_check(
+    async function transfer_private_onchain(
         public address_check : Future
-    ) -> Future {
-        let transfer_return : Future = async {
-            address_check.await();
-            // No additional logic needed for private transfer
-            // The Token records are already created and returned above
-        };
-        return transfer_return;
+    ) {
+        address_check.await();
+        // No additional logic needed for private transfer
+        // The Token records are already created and returned above
     }
 
 
