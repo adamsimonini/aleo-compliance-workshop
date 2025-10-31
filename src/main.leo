@@ -256,7 +256,7 @@ program compliance_toronto.aleo {
     }
 
     async function transfer_private_onchain(
-        public address_check : Future
+        address_check: Future
     ) {
         address_check.await();
         // No additional logic needed for private transfer
