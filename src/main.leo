@@ -38,9 +38,6 @@ program compliance_toronto.aleo {
         amount: u64,     // The token amount
     }
 
-    @noupgrade
-    async constructor() {}
-
 
 
 
