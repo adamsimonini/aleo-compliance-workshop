@@ -15,7 +15,14 @@ TODO:
 
 ====================================================================================================================  
 */
-program the_best_token.aleo {
+program compliance_toronto.aleo {
+
+    // This constructor is for the "admin" mode.
+    // It ensures that only the designated admin can upgrade the program.
+    @admin(address="aleo12jwjgr6uvlydcgjlguyhlp6rfgntnyx7hk5g8k5dllqpjtdngcqqcrhmfj")
+    async constructor() {
+        // The Leo compiler automatically generates the constructor logic.
+    }
     /* 
         A mapping is declared as mapping {name}:. Mappings contain key-value pairs and must be defined within a program.
         Mappings are stored publicly on-chain, but are program-scopped state. 
