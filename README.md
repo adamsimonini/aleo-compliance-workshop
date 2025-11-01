@@ -14,3 +14,23 @@ Or they can change state by generating a record along with a zk proof certificat
 
 ## Versioning
 Data on the blockchain is immutable, including program code. Updating a program means uploading a new version to supersede the previous one.
+
+### Mint Public:
+[
+    "aleo12jwjgr6uvlydcgjlguyhlp6rfgntnyx7hk5g8k5dllqpjtdngcqqcrhmfj",   "66u64"  ]
+
+### Mint Private
+
+["aleo12jwjgr6uvlydcgjlguyhlp6rfgntnyx7hk5g8k5dllqpjtdngcqqcrhmfj", "66u64"]
+
+### Transfer Private
+[
+    "{
+        owner: aleo12jwjgr6uvlydcgjlguyhlp6rfgntnyx7hk5g8k5dllqpjtdngcqqcrhmfj.private,
+        amount: 66u64.private,
+        _nonce: 260243138182286242241245871107463064800472007386532712320975003197326648304group.public,
+        _version: 1u8.public
+    }",
+    "aleo1cqep0qulay9fjjfgtz0y7gfj0d88yvqq4587dud88gjky7fmj59sc65pyq",
+    "25u64"
+]
